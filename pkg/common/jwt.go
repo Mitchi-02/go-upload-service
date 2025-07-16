@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"upload-service/configs"
 )
 
 func GenerateJWT(userID, secret string) (string, error) {
@@ -38,10 +37,7 @@ func GenerateJWT(userID, secret string) (string, error) {
 	return message + "." + signature, nil
 }
 
-func ValidateJWT(tokenString string) (*JWTClaims, error) {
-	appConfig := configs.GetAppConfig()
-	secret := appConfig.JWTSecret
-
+func ValidateJWT(tokenString string, secret string) (*JWTClaims, error) {
 	parts := strings.Split(tokenString, ".")
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid token format")

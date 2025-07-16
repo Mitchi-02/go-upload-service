@@ -30,7 +30,7 @@ func main() {
 	appConfig := configs.GetAppConfig()
 
 	mainRouter := http.NewServeMux()
-	mainRouter.Handle("/documents/", http.StripPrefix("/documents", documents.DocumentRouter(db)))
+	mainRouter.Handle("/documents/", http.StripPrefix("/documents", documents.DocumentRouter(db, appConfig)))
 	mainRouter.Handle("/auth/", http.StripPrefix("/auth", auth.AuthRouter(db, appConfig)))
 
 	rootRouter := middlewares.CORSMiddleware(mainRouter)
