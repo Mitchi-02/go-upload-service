@@ -1,0 +1,498 @@
+openapi: 3.0.3
+info:
+    title: Upload Service API
+    description: A file upload service with document management and user authentication
+    version: 1.0.0
+    contact:
+        name: Upload Service Team
+        email: support@upload-service.com
+
+servers:
+    - url: http://localhost:8080
+      description: Development server
+
+paths:
+    /auth/login:
+        post:
+            tags:
+                - Authentication
+            summary: User login
+            description: Authenticate user with email and password
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/LoginRequest"
+                        examples:
+                            valid_login:
+                                summary: Valid login request
+                                value:
+                                    email: "user@example.com"
+                                    password: "password123"
+            responses:
+                "200":
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/LoginResponse"
+                            examples:
+                                success:
+                                    summary: Successful login
+                                    value:
+                                        data:
+                                            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                            user:
+                                                id: "123e4567-e89b-12d3-a456-426614174000"
+                                                email: "user@example.com"
+                "401":
+                    description: Invalid credentials
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                invalid_credentials:
+                                    summary: Invalid credentials
+                                    value:
+                                        error: "Invalid credentials"
+                "422":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                missing_fields:
+                                    summary: Missing email or password
+                                    value:
+                                        error: "Email and password are required"
+                                invalid_body:
+                                    summary: Invalid request body
+                                    value:
+                                        error: "Invalid request body"
+
+    /auth/register:
+        post:
+            tags:
+                - Authentication
+            summary: User registration
+            description: Register a new user with email and password
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/RegisterRequest"
+                        examples:
+                            valid_registration:
+                                summary: Valid registration request
+                                value:
+                                    email: "newuser@example.com"
+                                    password: "password123"
+            responses:
+                "201":
+                    description: User created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/LoginResponse"
+                            examples:
+                                success:
+                                    summary: Successful registration
+                                    value:
+                                        data:
+                                            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                            user:
+                                                id: "123e4567-e89b-12d3-a456-426614174000"
+                                                email: "newuser@example.com"
+                "422":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                missing_fields:
+                                    summary: Missing email or password
+                                    value:
+                                        error: "Email and password are required"
+                                user_exists:
+                                    summary: User already exists
+                                    value:
+                                        error: "User already exists"
+                                invalid_body:
+                                    summary: Invalid request body
+                                    value:
+                                        error: "Invalid request body"
+                "500":
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                hash_error:
+                                    summary: Password hashing failed
+                                    value:
+                                        error: "Failed to hash password"
+                                create_error:
+                                    summary: User creation failed
+                                    value:
+                                        error: "Failed to create user"
+
+    /documents/:
+        get:
+            tags:
+                - Documents
+            summary: List documents
+            description: Get paginated list of documents
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number (default 1)
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 1
+                  example: 1
+            responses:
+                "200":
+                    description: Documents retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentListResponse"
+                            examples:
+                                success:
+                                    summary: Successful document list
+                                    value:
+                                        data:
+                                            results:
+                                                - id: "123e4567-e89b-12d3-a456-426614174000"
+                                                  name: "example.pdf"
+                                                  url: "http://localhost:9000/upload-service/documents/123e4567-e89b-12d3-a456-426614174000.pdf"
+                                                  uploaded_at: "2023-01-01T12:00:00Z"
+                                            total: 1
+                                empty_results:
+                                    summary: No documents found
+                                    value:
+                                        data:
+                                            results: []
+                                            total: 0
+                "500":
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                fetch_error:
+                                    summary: Failed to fetch documents
+                                    value:
+                                        error: "Failed to fetch documents"
+
+        post:
+            tags:
+                - Documents
+            summary: Upload document
+            description: Upload a new document (requires authentication)
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                file:
+                                    type: string
+                                    format: binary
+                                    description: File to upload (max 10MB)
+                            required:
+                                - file
+                        examples:
+                            file_upload:
+                                summary: File upload
+                                value:
+                                    file: "[binary data]"
+            responses:
+                "201":
+                    description: Document uploaded successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentResponse"
+                            examples:
+                                success:
+                                    summary: Successful upload
+                                    value:
+                                        data:
+                                            id: "123e4567-e89b-12d3-a456-426614174000"
+                                            name: "example.pdf"
+                                            url: "http://localhost:9000/upload-service/documents/123e4567-e89b-12d3-a456-426614174000.pdf"
+                                            uploaded_at: "2023-01-01T12:00:00Z"
+                "400":
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                no_file:
+                                    summary: No file provided
+                                    value:
+                                        error: "No file provided"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                not_authenticated:
+                                    summary: Not authenticated
+                                    value:
+                                        error: "Not authenticated"
+                "413":
+                    description: File too large
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                file_too_large:
+                                    summary: File too large
+                                    value:
+                                        error: "No file provided or file too large"
+                "500":
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                storage_error:
+                                    summary: Failed to store file
+                                    value:
+                                        error: "Failed to store file"
+                                save_error:
+                                    summary: Failed to save document record
+                                    value:
+                                        error: "Failed to save document record"
+
+    /documents/{id}:
+        delete:
+            tags:
+                - Documents
+            summary: Delete document
+            description: Delete a document by ID (requires authentication)
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  description: Document ID
+                  required: true
+                  schema:
+                      type: string
+                      format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+            responses:
+                "200":
+                    description: Document deleted successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentResponse"
+                            examples:
+                                success:
+                                    summary: Successful deletion
+                                    value:
+                                        data:
+                                            id: "123e4567-e89b-12d3-a456-426614174000"
+                                            name: "example.pdf"
+                                            url: "http://localhost:9000/upload-service/documents/123e4567-e89b-12d3-a456-426614174000.pdf"
+                                            uploaded_at: "2023-01-01T12:00:00Z"
+                "400":
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                missing_id:
+                                    summary: Missing document ID
+                                    value:
+                                        error: "Document ID is required"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                not_authenticated:
+                                    summary: Not authenticated
+                                    value:
+                                        error: "Not authenticated"
+                "404":
+                    description: Document not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                not_found:
+                                    summary: Document not found
+                                    value:
+                                        error: "Document not found"
+                "500":
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                            examples:
+                                delete_error:
+                                    summary: Failed to delete document
+                                    value:
+                                        error: "Failed to delete document"
+
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: JWT token obtained from login/register
+
+    schemas:
+        LoginRequest:
+            type: object
+            required:
+                - email
+                - password
+            properties:
+                email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: "user@example.com"
+                password:
+                    type: string
+                    format: password
+                    description: User's password
+                    example: "password123"
+
+        RegisterRequest:
+            type: object
+            required:
+                - email
+                - password
+            properties:
+                email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: "newuser@example.com"
+                password:
+                    type: string
+                    format: password
+                    description: User's password
+                    example: "password123"
+
+        UserResource:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    description: User's unique identifier
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: "user@example.com"
+
+        AuthResponse:
+            type: object
+            properties:
+                token:
+                    type: string
+                    description: JWT authentication token
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                    $ref: "#/components/schemas/UserResource"
+
+        LoginResponse:
+            type: object
+            properties:
+                data:
+                    $ref: "#/components/schemas/AuthResponse"
+
+        DocumentResource:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    description: Document's unique identifier
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                name:
+                    type: string
+                    description: Original filename
+                    example: "example.pdf"
+                url:
+                    type: string
+                    format: uri
+                    description: Public URL to access the document
+                    example: "http://localhost:9000/upload-service/documents/123e4567-e89b-12d3-a456-426614174000.pdf"
+                uploaded_at:
+                    type: string
+                    format: date-time
+                    description: Upload timestamp
+                    example: "2023-01-01T12:00:00Z"
+
+        DocumentResponse:
+            type: object
+            properties:
+                data:
+                    $ref: "#/components/schemas/DocumentResource"
+
+        PaginatedResponse:
+            type: object
+            properties:
+                results:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/DocumentResource"
+                    description: Array of documents
+                total:
+                    type: integer
+                    description: Total number of documents
+                    example: 1
+
+        DocumentListResponse:
+            type: object
+            properties:
+                data:
+                    $ref: "#/components/schemas/PaginatedResponse"
+
+        ErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    description: Error message
+                    example: "Invalid credentials"
+
+tags:
+    - name: Authentication
+      description: User authentication endpoints
+    - name: Documents
+      description: Document management endpoints
