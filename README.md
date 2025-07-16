@@ -54,6 +54,11 @@ upload-service/
 ├── main.go                 # Application entry point
 ```
 
+## Authentication
+
+- **Create Document** and **Delete Document** endpoints require JWT authentication (Bearer token)
+- **List Documents**, **Get Document**, **Login**, and **Register** endpoints are open access
+
 ## Configuration
 
 Set these environment variables (or use defaults):
