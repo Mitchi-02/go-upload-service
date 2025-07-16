@@ -33,7 +33,7 @@ func main() {
 	mainRouter.Handle("/documents/", http.StripPrefix("/documents", documents.DocumentRouter(db, appConfig)))
 	mainRouter.Handle("/auth/", http.StripPrefix("/auth", auth.AuthRouter(db, appConfig)))
 
-	rootRouter := middlewares.CORSMiddleware(mainRouter)
+	rootRouter := middlewares.CORSMiddleware(middlewares.LoggingMiddleware(mainRouter))
 
 	fmt.Printf("Server starting on port %s\n", appConfig.Port)
 	log.Fatal(http.ListenAndServe(":"+appConfig.Port, rootRouter))
