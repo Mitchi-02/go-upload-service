@@ -78,3 +78,10 @@ MINIO_BUCKET_NAME=upload-service
 MINIO_FOLDER_NAME=documents
 MINIO_BASE_URL=http://localhost:9000
 ```
+
+## Future Enhancements
+
+-   **Request Body Validation**: Add a separate validation layer for structured request body validation
+-   **Testing**: Implement unit and integration tests for all endpoints and services
+-   **Monitoring/Telemetry**: Add metrics collection and observability with tools like Prometheus
+-   **Custom Migration Command**: Create standalone migration command independent from main.go
