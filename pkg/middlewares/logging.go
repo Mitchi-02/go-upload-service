@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +31,6 @@ type LogEntry struct {
 	Timestamp    time.Time `json:"timestamp"`
 	Method       string    `json:"method"`
 	URL          string    `json:"url"`
-	RequestBody  string    `json:"request_body"`
 	ResponseBody string    `json:"response_body"`
 	UserID       string    `json:"user_id,omitempty"`
 	StatusCode   int       `json:"status_code"`
@@ -42,15 +40,6 @@ type LogEntry struct {
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
-		var requestBody string
-		if r.Body != nil {
-			bodyBytes, err := io.ReadAll(r.Body)
-			if err == nil {
-				requestBody = string(bodyBytes)
-				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-			}
-		}
 
 		rw := &responseWriter{
 			ResponseWriter: w,
@@ -79,7 +68,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			Timestamp:    start,
 			Method:       r.Method,
 			URL:          r.URL.String(),
-			RequestBody:  requestBody,
 			ResponseBody: rw.body.String(),
 			UserID:       userID,
 			StatusCode:   rw.statusCode,

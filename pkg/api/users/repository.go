@@ -19,8 +19,8 @@ func (r *Repository) GetByEmail(email string) (User, error) {
 	return user, err
 }
 
-func (r *Repository) Create(user User) error {
-	query := `INSERT INTO users (email, password) VALUES ($1, $2)`
-	_, err := r.db.Exec(query, user.Email, user.Password)
+func (r *Repository) Create(user *User) error {
+	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`
+	err := r.db.QueryRow(query, user.Email, user.Password).Scan(&user.ID)
 	return err
 }

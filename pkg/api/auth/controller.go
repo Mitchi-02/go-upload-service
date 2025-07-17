@@ -99,7 +99,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		Password: string(hashedPassword),
 	}
 
-	if err := c.repo.Create(user); err != nil {
+	if err := c.repo.Create(&user); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(common.APIResponse{Error: "Failed to create user"})
 		return
