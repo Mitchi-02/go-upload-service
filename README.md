@@ -42,7 +42,6 @@ upload-service/
 │   └── storage.go           # MinIO storage configuration
 ├── docs/
 │   ├── swagger.yaml         # OpenAPI specification
-│   └── README.md           # API documentation
 ├── pkg/
 │   ├── api/
 │   │   ├── auth/           # Authentication endpoints
@@ -51,13 +50,14 @@ upload-service/
 │   ├── common/             # Shared utilities and models
 │   ├── database/           # Database connection and migrations
 │   └── middlewares/        # HTTP middlewares (auth, CORS, JSON)
+├── tests/                  # Tests
 ├── main.go                 # Application entry point
 ```
 
 ## Authentication
 
-- **Create Document** and **Delete Document** endpoints require JWT authentication (Bearer token)
-- **List Documents**, **Get Document**, **Login**, and **Register** endpoints are open access
+-   **Create Document** and **Delete Document** endpoints require JWT authentication (Bearer token)
+-   **List Documents**, **Get Document**, **Login**, and **Register** endpoints are open access
 
 ## Configuration
 
